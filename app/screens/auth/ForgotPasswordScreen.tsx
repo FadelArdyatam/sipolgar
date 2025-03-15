@@ -10,9 +10,10 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native"
 import { useDispatch } from "react-redux"
-import { resetPassword } from "../../store/auth/authSlice"
+import { forgotPassword } from "../../store/auth/authSlice"
 import { Mail, ArrowLeft } from "lucide-react-native"
 import type { AppDispatch } from "../../store"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
@@ -30,16 +31,17 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email address")
+      Alert.alert("Error", "Silahkan masukkan email Anda")
       return
     }
 
     setLoading(true)
     try {
-      await dispatch(resetPassword(email)).unwrap()
+      await dispatch(forgotPassword(email)).unwrap()
       setResetSent(true)
+      Alert.alert("Sukses", "Link reset password telah dikirim ke email Anda")
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Failed to send reset email. Please try again.")
+      Alert.alert("Error", error instanceof Error ? error.message : "Gagal mengirim email reset. Silahkan coba lagi.")
     } finally {
       setLoading(false)
     }
@@ -51,15 +53,15 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         <View className="flex-1 p-6">
           <TouchableOpacity className="flex-row items-center mb-6" onPress={() => navigation.goBack()}>
             <ArrowLeft size={20} color="#4b5563" />
-            <Text className="ml-2 text-gray-600 font-medium">Back to Login</Text>
+            <Text className="ml-2 text-gray-600 font-medium">Kembali ke Login</Text>
           </TouchableOpacity>
 
           <View className="items-center mb-8">
-            <Text className="text-2xl font-bold text-gray-800">Forgot Password</Text>
+            <Text className="text-2xl font-bold text-gray-800">Lupa Password</Text>
             <Text className="text-gray-500 text-center mt-2">
               {resetSent
-                ? "Check your email for a link to reset your password"
-                : "Enter your email and we'll send you a link to reset your password"}
+                ? "Cek email Anda untuk link reset password"
+                : "Masukkan email Anda dan kami akan mengirimkan link untuk reset password"}
             </Text>
           </View>
 
@@ -86,7 +88,14 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
                 onPress={handleResetPassword}
                 disabled={loading}
               >
-                <Text className="text-white font-semibold text-lg">{loading ? "Sending..." : "Send Reset Link"}</Text>
+                {loading ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-semibold text-lg ml-2">Mengirim...</Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-semibold text-lg">Kirim Link Reset</Text>
+                )}
               </TouchableOpacity>
             </>
           ) : (
@@ -94,7 +103,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
               className="bg-blue-500 py-3 rounded-lg items-center mt-4"
               onPress={() => navigation.navigate("Login")}
             >
-              <Text className="text-white font-semibold text-lg">Back to Login</Text>
+              <Text className="text-white font-semibold text-lg">Kembali ke Login</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -103,3 +112,4 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
   )
 }
 
+export { ForgotPasswordScreen }

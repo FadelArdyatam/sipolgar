@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { login as loginApi, register as registerApi } from "../../services/authService"
+import * as authService from "../../services/AuthServices"
 import type { UserProfile, AuthState } from "../../types/user"
 
 const initialState: AuthState = {
@@ -9,13 +9,15 @@ const initialState: AuthState = {
   isAuthenticated: false,
   loading: false,
   error: null,
+  requiresEmailVerification: false,
+  verificationEmail: null,
 }
 
 export const login = createAsyncThunk(
   "auth/login",
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await loginApi(email, password)
+      const response = await authService.login(username, password)
 
       // Store authentication data in AsyncStorage
       await AsyncStorage.setItem("userToken", response.token)
@@ -30,25 +32,82 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   "auth/register",
-  async ({ name, email, password }: { name: string; email: string; password: string }, { rejectWithValue }) => {
+  async (
+    {
+      nama_lengkap,
+      username,
+      email,
+      no_hp,
+      tempat_lahir,
+      tanggal_lahir,
+      id_satuankerja,
+    }: {
+      nama_lengkap: string
+      username: string
+      email: string
+      no_hp: string
+      tempat_lahir: string
+      tanggal_lahir: string
+      id_satuankerja: number
+    },
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await registerApi(name, email, password)
+      const response = await authService.register(
+        nama_lengkap,
+        username,
+        email,
+        no_hp,
+        tempat_lahir,
+        tanggal_lahir,
+        id_satuankerja,
+      )
 
-      // Store authentication data in AsyncStorage
-      await AsyncStorage.setItem("userToken", response.token)
-      await AsyncStorage.setItem("userData", JSON.stringify(response.user))
-
-      return response
+      return {
+        message: response.message,
+        email: email,
+      }
     } catch (error: any) {
       return rejectWithValue(error.message || "Registration failed")
     }
   },
 )
 
+export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (email: string, { rejectWithValue }) => {
+  try {
+    const response = await authService.forgotPassword(email)
+    return response
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Failed to send reset email")
+  }
+})
+
+export const regenerateOTP = createAsyncThunk("auth/regenerateOTP", async (email: string, { rejectWithValue }) => {
+  try {
+    const response = await authService.regenerateOTP(email)
+    return response
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Failed to regenerate OTP")
+  }
+})
+
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (
+    { current_password, new_password }: { current_password: string; new_password: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await authService.changePassword(current_password, new_password)
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to change password")
+    }
+  },
+)
+
 export const logout = createAsyncThunk("auth/logout", async () => {
-  // Clear authentication data from AsyncStorage
-  await AsyncStorage.removeItem("userToken")
-  await AsyncStorage.removeItem("userData")
+  await authService.logout()
 })
 
 const authSlice = createSlice({
@@ -76,6 +135,10 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    clearEmailVerification: (state) => {
+      state.requiresEmailVerification = false
+      state.verificationEmail = null
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -102,13 +165,51 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false
-        state.isAuthenticated = true
-        state.token = action.payload.token
-        state.user = action.payload.user
+        state.requiresEmailVerification = true
+        state.verificationEmail = action.payload.email
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false
         state.error = (action.payload as string) || "Registration failed"
+      })
+
+      // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false
+        state.error = (action.payload as string) || "Failed to send reset email"
+      })
+
+      // Regenerate OTP
+      .addCase(regenerateOTP.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(regenerateOTP.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(regenerateOTP.rejected, (state, action) => {
+        state.loading = false
+        state.error = (action.payload as string) || "Failed to regenerate OTP"
+      })
+
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false
+        state.error = (action.payload as string) || "Failed to change password"
       })
 
       // Logout
@@ -116,11 +217,13 @@ const authSlice = createSlice({
         state.isAuthenticated = false
         state.token = null
         state.user = null
+        state.requiresEmailVerification = false
+        state.verificationEmail = null
       })
   },
 })
 
-export const { restoreUser, updateUserProfile, clearError } = authSlice.actions
+export const { restoreUser, updateUserProfile, clearError, clearEmailVerification } = authSlice.actions
 
 export default authSlice.reducer
 

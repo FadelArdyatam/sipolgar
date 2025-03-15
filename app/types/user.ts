@@ -1,39 +1,19 @@
 export interface User {
   id: string
-  name: string
+  nama_lengkap: string
+  username: string
   email: string
+  no_hp: string
+  tempat_lahir: string
+  tanggal_lahir: string
+  id_satuankerja: number
+  satuankerja?: string
 }
 
-export interface UserStats {
-  totalWorkouts: number
-  streak: number
-  achievements: number
-  height: number
-  weight: number
-  bmi: number
-  goal: string
-}
-
-// Menghapus definisi User yang redundan dan menyatukan semua ke UserProfile
-export interface UserProfile {
-  id: string
-  name: string
-  email: string
-  weight?: number // in kg
-  height?: number // in cm
-  age?: number
-  gender?: "male" | "female" | "other" | "prefer-not-to-say"
-  fitnessGoal?: "lose-weight" | "gain-muscle" | "maintain" | "improve-fitness" | "other"
-  activityLevel?: "beginner" | "intermediate" | "advanced"
-  workoutFrequency?: number // workouts per week
-  preferredWorkoutTypes?: string[] // e.g., ['cardio', 'strength', 'yoga']
-  onboardingCompleted: boolean
-  // Menambahkan statistik pengguna
-  stats?: {
-    totalWorkouts: number
-    streak: number
-    achievements: number
-  }
+export interface UserProfile extends User {
+  // Additional profile fields can be added here
+  isVerified?: boolean
+  profileImage?: string
 }
 
 export interface AuthState {
@@ -42,5 +22,45 @@ export interface AuthState {
   isAuthenticated: boolean
   loading: boolean
   error: string | null
+  requiresEmailVerification: boolean
+  verificationEmail: string | null
+}
+
+export interface SatuanKerja {
+  id: number
+  nama_satuan_kerja: string
+  parent_id?: number
+  level?: string
+  maps_url?: string
+  latitude?: string
+  longitude?: string
+  isDeleted?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface SatuanKerjaParent {
+  id: number
+  nama_satuan_kerja: string
+}
+
+export interface SatuanKerjaChild {
+  id: number
+  nama_satuan_kerja: string
+}
+
+export interface SatuanKerjaResponse {
+  message: string
+  data: SatuanKerja[] | SatuanKerja
+}
+
+export interface SatuanKerjaParentResponse {
+  message: string
+  data: SatuanKerjaParent[]
+}
+
+export interface SatuanKerjaChildResponse {
+  message: string
+  data: SatuanKerjaChild[]
 }
 

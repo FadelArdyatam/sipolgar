@@ -3,20 +3,19 @@
 import { useEffect, useState } from "react"
 import { View, Text, ActivityIndicator } from "react-native"
 import { useSelector, useDispatch } from "react-redux"
-import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import AppNavigator from "./AppNavigator"
 import AuthNavigator from "./AuthNavigator"
-import OnboardingNavigator from "./OnBoardingNavigator"
 import { restoreUser } from "../store/auth/authSlice"
 import type { RootState, AppDispatch } from "../store"
+import type { RootStackParamList } from "../types/navigation"
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator<RootStackParamList>()
 
 export default function RootNavigator() {
   const dispatch = useDispatch<AppDispatch>()
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth)
+  const { isAuthenticated, requiresEmailVerification } = useSelector((state: RootState) => state.auth)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -49,15 +48,13 @@ export default function RootNavigator() {
   }
 
   return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : user && !user.onboardingCompleted ? (
-          <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
-        ) : (
-          <Stack.Screen name="Main" component={AppNavigator} />
-        )}
-      </Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      ) : (
+        <Stack.Screen name="Main" component={AppNavigator} />
+      )}
+    </Stack.Navigator>
   )
 }
 

@@ -1,15 +1,49 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native"
+"use client"
+
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from "react-native"
 import { useSelector, useDispatch } from "react-redux"
 import { logout } from "../store/auth/authSlice"
-import { User, Settings, LogOut, Award, Calendar, Activity, ChevronRight } from "lucide-react-native"
+import { User, Settings, LogOut, Calendar, ChevronRight } from "lucide-react-native"
+import { getSatuanKerjaDetail } from "../services/AuthServices"
+import { useEffect, useState } from "react"
 import type { RootState, AppDispatch } from "../store"
+import type { SatuanKerja } from "../types/user"
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>()
   const { user } = useSelector((state: RootState) => state.auth)
+  const [satuanKerja, setSatuanKerja] = useState<SatuanKerja | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchSatuanKerjaDetail = async () => {
+      if (user?.id_satuankerja) {
+        setLoading(true)
+        try {
+          const data = await getSatuanKerjaDetail(user.id_satuankerja)
+          setSatuanKerja(data)
+        } catch (error) {
+          console.error("Failed to fetch satuan kerja detail:", error)
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchSatuanKerjaDetail()
+  }, [user?.id_satuankerja])
 
   const handleLogout = () => {
-    dispatch(logout())
+    Alert.alert("Konfirmasi Logout", "Apakah Anda yakin ingin keluar?", [
+      {
+        text: "Batal",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        onPress: () => dispatch(logout()),
+      },
+    ])
   }
 
   if (!user) {
@@ -20,19 +54,6 @@ export default function ProfileScreen() {
     )
   }
 
-  // Calculate BMI if height and weight are available
-  const bmi = user.height && user.weight ? (user.weight / Math.pow(user.height / 100, 2)).toFixed(1) : null
-
-  // Determine BMI category
-  const getBmiCategory = (bmi: number) => {
-    if (bmi < 18.5) return { label: "Underweight", color: "text-blue-500" }
-    if (bmi < 25) return { label: "Normal", color: "text-green-500" }
-    if (bmi < 30) return { label: "Overweight", color: "text-orange-500" }
-    return { label: "Obese", color: "text-red-500" }
-  }
-
-  const bmiCategory = bmi ? getBmiCategory(Number.parseFloat(bmi)) : null
-
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="bg-blue-500 pt-12 pb-6 px-4 rounded-b-3xl">
@@ -41,109 +62,45 @@ export default function ProfileScreen() {
             <Image source={{ uri: "https://via.placeholder.com/100" }} className="w-20 h-20 rounded-full" />
           </View>
           <View className="ml-4 flex-1">
-            <Text className="text-white text-xl font-bold">{user.name}</Text>
+            <Text className="text-white text-xl font-bold">{user.nama_lengkap}</Text>
             <Text className="text-blue-100">{user.email}</Text>
+            <Text className="text-blue-100">{user.username}</Text>
 
             <View className="flex-row mt-2">
               <TouchableOpacity className="bg-white bg-opacity-20 px-3 py-1 rounded-full mr-2">
-                <Text className="text-white text-sm">Edit Profile</Text>
+                <Text className="text-white text-sm">Edit Profil</Text>
               </TouchableOpacity>
               <TouchableOpacity className="bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                <Text className="text-white text-sm">Settings</Text>
+                <Text className="text-white text-sm">Pengaturan</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </View>
 
-      {/* User Stats */}
+      {/* User Info */}
       <View className="mx-4 -mt-4 bg-white rounded-xl shadow-sm p-4 mb-6">
-        <Text className="text-gray-800 font-semibold mb-3">Your Stats</Text>
-        <View className="flex-row justify-between">
-          {user.weight && (
-            <View className="items-center">
-              <Text className="text-gray-500 text-xs">Weight</Text>
-              <Text className="text-gray-800 font-bold text-lg">{user.weight} kg</Text>
-            </View>
-          )}
-
-          {user.height && (
-            <View className="items-center">
-              <Text className="text-gray-500 text-xs">Height</Text>
-              <Text className="text-gray-800 font-bold text-lg">{user.height} cm</Text>
-            </View>
-          )}
-
-          {bmi && (
-            <View className="items-center">
-              <Text className="text-gray-500 text-xs">BMI</Text>
-              <Text className="text-gray-800 font-bold text-lg">{bmi}</Text>
-              <Text className={`text-xs ${bmiCategory?.color}`}>{bmiCategory?.label}</Text>
-            </View>
-          )}
-
-          {user.age && (
-            <View className="items-center">
-              <Text className="text-gray-500 text-xs">Age</Text>
-              <Text className="text-gray-800 font-bold text-lg">{user.age}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Fitness Goal */}
-      {user.fitnessGoal && (
-        <View className="mx-4 bg-white rounded-xl shadow-sm p-4 mb-6">
-          <View className="flex-row items-center mb-2">
-            <Award size={18} color="#4b5563" />
-            <Text className="text-gray-800 font-semibold ml-2">Fitness Goal</Text>
+        <Text className="text-gray-800 font-semibold mb-3">Informasi Pengguna</Text>
+        <View className="space-y-2">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500">Nomor HP</Text>
+            <Text className="text-gray-800 font-medium">{user.no_hp}</Text>
           </View>
-          <Text className="text-gray-700">
-            {user.fitnessGoal === "lose-weight" && "Lose Weight"}
-            {user.fitnessGoal === "gain-muscle" && "Gain Muscle"}
-            {user.fitnessGoal === "maintain" && "Maintain Fitness"}
-            {user.fitnessGoal === "improve-fitness" && "Improve Overall Fitness"}
-            {user.fitnessGoal === "other" && "Custom Goal"}
-          </Text>
-        </View>
-      )}
-
-      {/* Workout Preferences */}
-      <View className="mx-4 bg-white rounded-xl shadow-sm p-4 mb-6">
-        <View className="flex-row items-center mb-2">
-          <Activity size={18} color="#4b5563" />
-          <Text className="text-gray-800 font-semibold ml-2">Workout Preferences</Text>
-        </View>
-
-        <View className="mb-3">
-          <Text className="text-gray-600 mb-1">Activity Level</Text>
-          <Text className="text-gray-800">
-            {user.activityLevel === "beginner" && "Beginner"}
-            {user.activityLevel === "intermediate" && "Intermediate"}
-            {user.activityLevel === "advanced" && "Advanced"}
-            {!user.activityLevel && "Not specified"}
-          </Text>
-        </View>
-
-        <View className="mb-3">
-          <Text className="text-gray-600 mb-1">Workout Frequency</Text>
-          <Text className="text-gray-800">
-            {user.workoutFrequency ? `${user.workoutFrequency} days per week` : "Not specified"}
-          </Text>
-        </View>
-
-        {user.preferredWorkoutTypes && user.preferredWorkoutTypes.length > 0 && (
-          <View>
-            <Text className="text-gray-600 mb-1">Preferred Workout Types</Text>
-            <View className="flex-row flex-wrap">
-              {user.preferredWorkoutTypes.map((type) => (
-                <View key={type} className="bg-blue-100 px-2 py-1 rounded mr-2 mb-2">
-                  <Text className="text-blue-700 text-xs">{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
-                </View>
-              ))}
-            </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500">Tempat Lahir</Text>
+            <Text className="text-gray-800 font-medium">{user.tempat_lahir}</Text>
           </View>
-        )}
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500">Tanggal Lahir</Text>
+            <Text className="text-gray-800 font-medium">{user.tanggal_lahir}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500">Satuan Kerja</Text>
+            <Text className="text-gray-800 font-medium">
+              {loading ? "Loading..." : satuanKerja?.nama_satuan_kerja || `ID: ${user.id_satuankerja}`}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* Menu Items */}
@@ -151,7 +108,7 @@ export default function ProfileScreen() {
         <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
           <View className="flex-row items-center">
             <User size={18} color="#4b5563" />
-            <Text className="text-gray-800 ml-3">Account Settings</Text>
+            <Text className="text-gray-800 ml-3">Pengaturan Akun</Text>
           </View>
           <ChevronRight size={18} color="#9ca3af" />
         </TouchableOpacity>
@@ -159,7 +116,7 @@ export default function ProfileScreen() {
         <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
           <View className="flex-row items-center">
             <Calendar size={18} color="#4b5563" />
-            <Text className="text-gray-800 ml-3">Workout History</Text>
+            <Text className="text-gray-800 ml-3">Riwayat Aktivitas</Text>
           </View>
           <ChevronRight size={18} color="#9ca3af" />
         </TouchableOpacity>
@@ -167,7 +124,7 @@ export default function ProfileScreen() {
         <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
           <View className="flex-row items-center">
             <Settings size={18} color="#4b5563" />
-            <Text className="text-gray-800 ml-3">App Settings</Text>
+            <Text className="text-gray-800 ml-3">Pengaturan Aplikasi</Text>
           </View>
           <ChevronRight size={18} color="#9ca3af" />
         </TouchableOpacity>
