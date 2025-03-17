@@ -1,18 +1,32 @@
+// Update the navigation types to include the new screens
 export type AuthStackParamList = {
-    Login: undefined
-    Register: undefined
-    ForgotPassword: undefined
-    ResetPassword: { token: string }
-    EmailVerification: undefined
-  }
+  Login: undefined
+  Register: undefined
+  ForgotPassword: undefined
+  ResetPassword: { token: string }
+  EmailVerification: undefined
+  ChangePassword: { email: string }
+}
 
-  export type AppStackParamList = {
-    Profile: undefined
-  }
-  
-  export type RootStackParamList = {
-    Auth: undefined
-    Main: undefined
-  }
-  
-  
+export type OnboardingStackParamList = {
+  Onboarding: undefined
+  Main: undefined
+}
+
+export type AppStackParamList = {
+  Profile: undefined
+  ProfileTab: undefined
+  FitnessStats: undefined
+  Home: undefined
+  Workout: undefined
+  Nutrition: undefined
+  Progress: undefined
+}
+
+export type RootStackParamList = {
+  Auth: undefined
+  Onboarding: undefined
+  Main: undefined
+}
+
+

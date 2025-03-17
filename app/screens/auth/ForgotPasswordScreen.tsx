@@ -17,7 +17,7 @@ import { forgotPassword } from "../../store/auth/authSlice"
 import { Mail, ArrowLeft } from "lucide-react-native"
 import type { AppDispatch } from "../../store"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { AuthStackParamList } from "../../navigation/types"
+import type { AuthStackParamList } from "../../types/navigation"
 
 type ForgotPasswordScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "ForgotPassword">
@@ -84,7 +84,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
               </View>
 
               <TouchableOpacity
-                className={`bg-amber-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
+                className={`bg-blue-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
                 onPress={handleResetPassword}
                 disabled={loading}
               >
@@ -100,7 +100,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
             </>
           ) : (
             <TouchableOpacity
-              className="bg-amber-500 py-3 rounded-lg items-center mt-4"
+              className="bg-blue-500 py-3 rounded-lg items-center mt-4"
               onPress={() => navigation.navigate("Login")}
             >
               <Text className="text-white font-semibold text-lg">Kembali ke Login</Text>
@@ -112,4 +112,3 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
   )
 }
 
-export { ForgotPasswordScreen }

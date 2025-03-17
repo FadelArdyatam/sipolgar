@@ -1,9 +1,11 @@
+// Update AuthNavigator to include the ChangePassword screen
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { useSelector } from "react-redux"
 import LoginScreen from "../screens/auth/LoginScreen"
 import RegisterScreen from "../screens/auth/RegisterScreen"
 import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen"
 import EmailVerificationScreen from "../screens/auth/EmailVerificationScreen"
+import ChangePasswordScreen from "../screens/auth/ChangePasswordScreen"
 import type { AuthStackParamList } from "../types/navigation"
 import type { RootState } from "../store"
 
@@ -24,8 +26,8 @@ export default function AuthNavigator() {
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     </Stack.Navigator>
   )
 }
 
-export { AuthNavigator }

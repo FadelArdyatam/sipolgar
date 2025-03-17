@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as authService from "../../services/AuthServices"
-import type { UserProfile, AuthState } from "../../types/user"
+import type { UserProfile, AuthState, PersonelUpdate } from "../../types/user"
 
 const initialState: AuthState = {
   user: null,
@@ -136,17 +136,36 @@ const authSlice = createSlice({
         state.expiresAt = action.payload.expiresAt
       }
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
+    updateUserProfile: (state, action: PayloadAction<{ personel?: PersonelUpdate } & Partial<UserProfile>>) => {
       if (state.user) {
-        state.user = {
-          ...state.user,
-          ...action.payload,
+        // Handle nested personel object if it exists in the payload
+        if (action.payload.personel && state.user.personel) {
+          state.user = {
+            ...state.user,
+            ...action.payload,
+            personel: {
+              ...state.user.personel,
+              ...action.payload.personel,
+            },
+          }
+        } else {
+          state.user = {
+            ...state.user,
+            ...action.payload,
+          }
         }
 
         // Update user data in AsyncStorage
         AsyncStorage.setItem("userData", JSON.stringify(state.user)).catch((error) =>
           console.error("Failed to update user data in AsyncStorage:", error),
         )
+
+        // Mark onboarding as completed if fitness data is provided
+        if (action.payload.personel?.tinggi_badan && action.payload.personel?.berat_badan) {
+          AsyncStorage.setItem("onboardingCompleted", "true").catch((error) =>
+            console.error("Failed to update onboarding status in AsyncStorage:", error),
+          )
+        }
       }
     },
     clearError: (state) => {
@@ -222,9 +241,16 @@ const authSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(changePassword.fulfilled, (state) => {
+      .addCase(changePassword.fulfilled, (state, action) => {
         state.loading = false
+        // Update token if returned
+        if (action.payload.token) {
+          state.token = action.payload.token
+          // Add this line to update token in AsyncStorage
+          AsyncStorage.setItem("userToken", action.payload.token)
+        }
       })
+
       .addCase(changePassword.rejected, (state, action) => {
         state.loading = false
         state.error = (action.payload as string) || "Failed to change password"

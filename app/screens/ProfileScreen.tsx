@@ -2,14 +2,22 @@
 
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from "react-native"
 import { useSelector, useDispatch } from "react-redux"
-import { logout } from "../store/auth/authSlice"
-import { User, Settings, LogOut, Calendar, ChevronRight } from "lucide-react-native"
+import { logout, restoreUser } from "../store/auth/authSlice"
+import { User, Settings, LogOut, Calendar, ChevronRight, Activity } from "lucide-react-native"
 import { getSatuanKerjaDetail } from "../services/AuthServices"
 import { useEffect, useState } from "react"
 import type { RootState, AppDispatch } from "../store"
 import type { SatuanKerja } from "../types/user"
+// Update imports to use the correct navigation types
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { AppStackParamList } from "../types/navigation"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-export default function ProfileScreen() {
+type ProfileScreenProps = {
+  navigation: NativeStackNavigationProp<AppStackParamList, "Profile">
+}
+
+export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const dispatch = useDispatch<AppDispatch>()
   const { user } = useSelector((state: RootState) => state.auth)
   const [satuanKerja, setSatuanKerja] = useState<SatuanKerja | null>(null)
@@ -32,6 +40,54 @@ export default function ProfileScreen() {
 
     fetchSatuanKerjaDetail()
   }, [user?.personel?.id_satuankerja])
+useEffect(() => {
+  const restoreSession = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const userDataString = await AsyncStorage.getItem("userData");
+      const expiresAt = await AsyncStorage.getItem("tokenExpiresAt");
+      
+      if (userToken && userDataString) {
+        const userData = JSON.parse(userDataString);
+        // Dispatch to Redux to restore session
+        dispatch(restoreUser({
+          token: userToken,
+          user: userData,
+          expiresAt: expiresAt || undefined
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to restore session:", error);
+    }
+  };
+  
+  restoreSession();
+}, []);
+
+
+useEffect(() => {
+  const restoreToken = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const userDataString = await AsyncStorage.getItem('userData');
+      const expiresAt = await AsyncStorage.getItem('tokenExpiresAt');
+      
+      if (userToken && userDataString) {
+        const userData = JSON.parse(userDataString);
+        dispatch(restoreUser({
+          token: userToken,
+          user: userData,
+          expiresAt: expiresAt || undefined
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to restore token:', error);
+    }
+  };
+  
+  restoreToken();
+}, []);
+
 
   const handleLogout = () => {
     Alert.alert("Konfirmasi Logout", "Apakah Anda yakin ingin keluar?", [
@@ -56,15 +112,15 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="bg-amber-500 pt-12 pb-6 px-4 rounded-b-3xl">
+      <View className="bg-blue-500 pt-12 pb-6 px-4 rounded-b-3xl">
         <View className="flex-row items-center">
           <View className="bg-white p-1 rounded-full">
             <Image source={{ uri: "https://via.placeholder.com/100" }} className="w-20 h-20 rounded-full" />
           </View>
           <View className="ml-4 flex-1">
             <Text className="text-white text-xl font-bold">{user.personel?.nama_lengkap || user.name}</Text>
-            <Text className="text-amber-100">{user.email}</Text>
-            <Text className="text-amber-100">{user.username}</Text>
+            <Text className="text-blue-100">{user.email}</Text>
+            <Text className="text-blue-100">{user.username}</Text>
 
             <View className="flex-row mt-2">
               <TouchableOpacity className="bg-white bg-opacity-20 px-3 py-1 rounded-full mr-2">
@@ -106,6 +162,18 @@ export default function ProfileScreen() {
                 : satuanKerja?.nama_satuan_kerja || `ID: ${user.personel?.id_satuankerja || "Tidak tersedia"}`}
             </Text>
           </View>
+          {user.personel?.tinggi_badan && (
+            <View className="flex-row justify-between">
+              <Text className="text-gray-500">Tinggi Badan</Text>
+              <Text className="text-gray-800 font-medium">{user.personel.tinggi_badan} cm</Text>
+            </View>
+          )}
+          {user.personel?.berat_badan && (
+            <View className="flex-row justify-between">
+              <Text className="text-gray-500">Berat Badan</Text>
+              <Text className="text-gray-800 font-medium">{user.personel.berat_badan} kg</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -123,6 +191,17 @@ export default function ProfileScreen() {
           <View className="flex-row items-center">
             <Calendar size={18} color="#4b5563" />
             <Text className="text-gray-800 ml-3">Riwayat Aktivitas</Text>
+          </View>
+          <ChevronRight size={18} color="#9ca3af" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center justify-between py-3 border-b border-gray-100"
+          onPress={() => navigation.navigate("FitnessStats")}
+        >
+          <View className="flex-row items-center">
+            <Activity size={18} color="#4b5563" />
+            <Text className="text-gray-800 ml-3">Statistik Fitness</Text>
           </View>
           <ChevronRight size={18} color="#9ca3af" />
         </TouchableOpacity>
@@ -145,4 +224,3 @@ export default function ProfileScreen() {
     </ScrollView>
   )
 }
-

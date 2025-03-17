@@ -17,8 +17,9 @@ import {
 import { useDispatch, useSelector } from "react-redux"
 import { regenerateOTP, clearError } from "../../store/auth/authSlice"
 import { ArrowLeft } from "lucide-react-native"
+// Update imports to use the correct navigation types
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { AuthStackParamList } from "../../navigation/types"
+import type { AuthStackParamList } from "../../types/navigation"
 import type { AppDispatch, RootState } from "../../store"
 import { clearEmailVerification } from "../../store/auth/authSlice"
 
@@ -33,6 +34,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [resendDisabled, setResendDisabled] = useState(false)
   const [countdown, setCountdown] = useState(60)
+  const [verifying, setVerifying] = useState(false)
 
   const inputRefs = useRef<Array<TextInput | null>>([])
 
@@ -104,18 +106,40 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
       return
     }
 
-    // In this implementation, we're just navigating back to login
-    // since the API doesn't have a specific OTP verification endpoint
-    Alert.alert("Sukses", "Email berhasil diverifikasi", [
-      {
-        text: "OK",
-        onPress: () => {
-          // Clear the email verification requirement
-          dispatch(clearEmailVerification())
-          navigation.navigate("Login")
+    setVerifying(true)
+    try {
+      // Call the verify OTP API using fetch
+      const response = await fetch("https://demo.sosiogrow.my.id/api/v1/verify-email-otp", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-      },
-    ])
+        body: JSON.stringify({
+          email: verificationEmail,
+          otp_code: otpString,
+        }),
+      })
+
+      const data = await response.json()
+      
+
+      // Check if the response contains an error message
+      if (!response.ok) {
+        throw new Error(data.message || "Verifikasi OTP gagal")
+      }
+
+      // Clear the email verification requirement
+      dispatch(clearEmailVerification())
+
+      // Navigate to change password screen
+      navigation.navigate("ChangePassword", { email: verificationEmail })
+    } catch (error) {
+      console.error("OTP verification error:", error)
+      Alert.alert("Gagal", error instanceof Error ? error.message : "Verifikasi OTP gagal. Silahkan coba lagi.")
+    } finally {
+      setVerifying(false)
+    }
   }
 
   const handleResendOtp = async () => {
@@ -153,7 +177,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
           <View className="items-center mb-8">
             <Text className="text-2xl font-bold text-gray-800">Verifikasi Email</Text>
             <Text className="text-gray-500 text-center mt-2">Kami telah mengirimkan kode verifikasi ke</Text>
-            <Text className="text-amber-500 font-medium mt-1">{verificationEmail || "email Anda"}</Text>
+            <Text className="text-blue-500 font-medium mt-1">{verificationEmail || "email Anda"}</Text>
           </View>
 
           <View className="mb-8">
@@ -175,11 +199,11 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
           </View>
 
           <TouchableOpacity
-            className={`bg-amber-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
+            className={`bg-blue-500 py-3 rounded-lg items-center ${verifying ? "opacity-70" : ""}`}
             onPress={handleVerify}
-            disabled={loading}
+            disabled={verifying}
           >
-            {loading ? (
+            {verifying ? (
               <View className="flex-row items-center">
                 <ActivityIndicator size="small" color="white" />
                 <Text className="text-white font-semibold text-lg ml-2">Memverifikasi...</Text>
@@ -195,7 +219,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
               <Text className="text-gray-400">Kirim ulang dalam {countdown}d</Text>
             ) : (
               <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
-                <Text className="text-amber-500 font-medium">Kirim Ulang Kode</Text>
+                <Text className="text-blue-500 font-medium">Kirim Ulang Kode</Text>
               </TouchableOpacity>
             )}
           </View>

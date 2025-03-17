@@ -19,12 +19,36 @@ export interface Personel {
   jenis_kelamin: string
   jenis_pekerjaan: string | null
   intensitas: string | null
-  tinggi_badan: string | null
+  tinggi_badan: number | null // Changed from string to number
+  berat_badan: number | null // Added berat_badan field as number
+  fitness_goal: string | null
+  activity_level: string | null
   id_satuankerja: number
   id_pangkat: number | null
   id_user: number
   created_at: string
   updated_at: string
+}
+
+// Create a partial version of Personel for updates
+export interface PersonelUpdate {
+  id?: number
+  nama_lengkap?: string
+  tempat_lahir?: string
+  tanggal_lahir?: string
+  no_hp?: string
+  jenis_kelamin?: string
+  jenis_pekerjaan?: string | null
+  intensitas?: string | null
+  tinggi_badan?: number | null
+  berat_badan?: number | null
+  fitness_goal?: string | null
+  activity_level?: string | null
+  id_satuankerja?: number
+  id_pangkat?: number | null
+  id_user?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface UserProfile extends User {
@@ -117,6 +141,11 @@ export interface RegisterResponse {
 
 // Update the RegenerateOTPResponse interface to match the exact response format
 export interface RegenerateOTPResponse {
+  message: string
+}
+
+// Update the ForgotPasswordResponse interface to match the exact response format
+export interface ForgotPasswordResponse {
   message: string
 }
 

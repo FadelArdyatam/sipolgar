@@ -4,24 +4,23 @@ import { useState } from "react"
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
   ActivityIndicator,
-  Image,
 } from "react-native"
 import { useDispatch } from "react-redux"
 import { login } from "../../store/auth/authSlice"
 import { Eye, EyeOff, User, Lock } from "lucide-react-native"
-import type { AppDispatch } from "../../store"
+// Update imports to use the correct navigation types
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { AuthStackParamList } from "../../navigation/types"
-import { Button } from "~/components/ui/button"
-import { Input } from "~/components/ui/input"
+import type { AuthStackParamList } from "../../types/navigation"
+import type { AppDispatch } from "../../store"
 
-type Log1inScreenProps = {
+type LoginScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "Login">
 }
 
@@ -30,32 +29,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [formErrors, setFormErrors] = useState({
-    username: "",
-    password: "",
-  })
   const dispatch = useDispatch<AppDispatch>()
 
-  const validateForm = () => {
-    let isValid = true
-    const errors = { username: "", password: "" }
-
-    if (!username.trim()) {
-      errors.username = "Username tidak boleh kosong"
-      isValid = false
-    }
-
-    if (!password) {
-      errors.password = "Password tidak boleh kosong"
-      isValid = false
-    }
-
-    setFormErrors(errors)
-    return isValid
-  }
-
   const handleLogin = async () => {
-    if (!validateForm()) {
+    if (!username || !password) {
+      Alert.alert("Error", "Please fill in all fields")
       return
     }
 
@@ -69,7 +47,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       console.error("Login error:", error)
       Alert.alert(
         "Login Failed",
-        (error instanceof Error && error.message || "Kode verifikasi baru telah dikirim ke email Anda")
+        error instanceof Error ? error.message : "Please check your credentials and try again",
       )
     } finally {
       setLoading(false)
@@ -79,65 +57,54 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1 bg-gray-50">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 p-6 justify-start">
-          {/* Logo and welcome section with animation */}
-          <View className="items-center mb-8 mt-10">
-            
-            <Image src="/">
-              
-            </Image>
-            <View className="w-20 h-20 mb-6 bg-amber-500 rounded-full items-center justify-center">
+        <View className="flex-1 p-6 justify-center">
+          <View className="items-center mb-8">
+            <View className="w-20 h-20 bg-blue-500 rounded-full items-center justify-center mb-4">
               <Text className="text-white text-3xl font-bold">S</Text>
             </View>
-            
-            
             <Text className="text-2xl font-bold text-gray-800">Selamat Datang</Text>
-            <Text className="text-gray-500 text-center mt-2">Silahkan masuk untuk melanjutkan</Text>
+            <Text className="text-gray-500 text-center mt-2">Masuk ke akun Sipolgar Anda untuk melanjutkan</Text>
           </View>
 
-          <View className="space-y-4 mb-4">
-            <Input
-              leftIcon={<User size={20} color="#6b7280" />}
-              placeholder="NRP/Username"
-              value={username}
-              onChangeText={(text) => {
-                setUsername(text)
-                if (formErrors.username) setFormErrors({...formErrors, username: ""})
-              }}
-              autoCapitalize="none"
-              error={formErrors.username}
-              className="mb-2"
-            />
+          <View className="space-y-4 mb-6">
+            <View className="relative">
+              <View className="absolute left-3 top-3 z-10">
+                <User size={20} color="#6b7280" />
+              </View>
+              <TextInput
+                className="bg-white border border-gray-300 rounded-lg px-10 py-3 text-gray-700"
+                placeholder="NRP/Username"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+              />
+            </View>
 
-            <Input
-              leftIcon={<Lock size={20} color="#6b7280" />}
-              rightIcon={showPassword ? <EyeOff size={20} color="#6b7280" /> : <Eye size={20} color="#6b7280" />}
-              onRightIconPress={() => setShowPassword(!showPassword)}
-              placeholder="Password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text)
-                if (formErrors.password) setFormErrors({...formErrors, password: ""})
-              }}
-              secureTextEntry={!showPassword}
-              error={formErrors.password}
-              className="mb-2"
-            />
+            <View className="relative">
+              <View className="absolute left-3 top-3 z-10">
+                <Lock size={20} color="#6b7280" />
+              </View>
+              <TextInput
+                className="bg-white border border-gray-300 rounded-lg px-10 py-3 text-gray-700"
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity className="absolute right-3 top-3 z-10" onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff size={20} color="#6b7280" /> : <Eye size={20} color="#6b7280" />}
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <TouchableOpacity 
-            className="self-end mb-6" 
-            onPress={() => navigation.navigate("ForgotPassword")}
-            activeOpacity={0.7}
-          >
-            <Text className="text-amber-500 font-medium">Lupa Password?</Text>
+          <TouchableOpacity className="self-end mb-6" onPress={() => navigation.navigate("ForgotPassword")}>
+            <Text className="text-blue-500 font-medium">Lupa Password?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`bg-amber-500 py-3.5 rounded-full items-center shadow-sm ${loading ? "opacity-70" : ""}`}
+            className={`bg-blue-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
             onPress={handleLogin}
             disabled={loading}
-            activeOpacity={0.8}
           >
             {loading ? (
               <View className="flex-row items-center">
@@ -151,11 +118,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
           <View className="flex-row justify-center mt-6">
             <Text className="text-gray-600">Belum punya akun? </Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate("Register")}
-              activeOpacity={0.7}
-            >
-              <Text className="text-amber-500 font-medium">Daftar</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <Text className="text-blue-500 font-medium">Daftar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -163,3 +127,4 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     </KeyboardAvoidingView>
   )
 }
+

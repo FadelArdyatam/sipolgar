@@ -146,19 +146,21 @@ export const register = async (
 }
 
 // Change password
-export const changePassword = async (current_password: string, new_password: string): Promise<{ message: string }> => {
+export const changePassword = async (current_password: string, new_password: string): Promise<{ message: string, token?: string }> => {
   try {
     const response = await api.post("/change-password", {
       current_password,
       new_password,
     })
 
-    return { message: response.data.message || "Password changed successfully" }
+    return { 
+      message: response.data.message || "Password changed successfully",
+      token: response.data.token  // Make sure this is included
+    }
   } catch (error) {
     throw error
   }
 }
-
 // Forgot password
 export const forgotPassword = async (email: string): Promise<{ message: string }> => {
   try {
