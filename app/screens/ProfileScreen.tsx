@@ -17,10 +17,10 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const fetchSatuanKerjaDetail = async () => {
-      if (user?.id_satuankerja) {
+      if (user?.personel?.id_satuankerja) {
         setLoading(true)
         try {
-          const data = await getSatuanKerjaDetail(user.id_satuankerja)
+          const data = await getSatuanKerjaDetail(user.personel.id_satuankerja)
           setSatuanKerja(data)
         } catch (error) {
           console.error("Failed to fetch satuan kerja detail:", error)
@@ -31,7 +31,7 @@ export default function ProfileScreen() {
     }
 
     fetchSatuanKerjaDetail()
-  }, [user?.id_satuankerja])
+  }, [user?.personel?.id_satuankerja])
 
   const handleLogout = () => {
     Alert.alert("Konfirmasi Logout", "Apakah Anda yakin ingin keluar?", [
@@ -56,15 +56,15 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="bg-blue-500 pt-12 pb-6 px-4 rounded-b-3xl">
+      <View className="bg-amber-500 pt-12 pb-6 px-4 rounded-b-3xl">
         <View className="flex-row items-center">
           <View className="bg-white p-1 rounded-full">
             <Image source={{ uri: "https://via.placeholder.com/100" }} className="w-20 h-20 rounded-full" />
           </View>
           <View className="ml-4 flex-1">
-            <Text className="text-white text-xl font-bold">{user.nama_lengkap}</Text>
-            <Text className="text-blue-100">{user.email}</Text>
-            <Text className="text-blue-100">{user.username}</Text>
+            <Text className="text-white text-xl font-bold">{user.personel?.nama_lengkap || user.name}</Text>
+            <Text className="text-amber-100">{user.email}</Text>
+            <Text className="text-amber-100">{user.username}</Text>
 
             <View className="flex-row mt-2">
               <TouchableOpacity className="bg-white bg-opacity-20 px-3 py-1 rounded-full mr-2">
@@ -84,20 +84,26 @@ export default function ProfileScreen() {
         <View className="space-y-2">
           <View className="flex-row justify-between">
             <Text className="text-gray-500">Nomor HP</Text>
-            <Text className="text-gray-800 font-medium">{user.no_hp}</Text>
+            <Text className="text-gray-800 font-medium">{user.personel?.no_hp || "Tidak tersedia"}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500">Tempat Lahir</Text>
-            <Text className="text-gray-800 font-medium">{user.tempat_lahir}</Text>
+            <Text className="text-gray-800 font-medium">{user.personel?.tempat_lahir || "Tidak tersedia"}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500">Tanggal Lahir</Text>
-            <Text className="text-gray-800 font-medium">{user.tanggal_lahir}</Text>
+            <Text className="text-gray-800 font-medium">{user.personel?.tanggal_lahir || "Tidak tersedia"}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500">Jenis Kelamin</Text>
+            <Text className="text-gray-800 font-medium">{user.personel?.jenis_kelamin || "Tidak tersedia"}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500">Satuan Kerja</Text>
             <Text className="text-gray-800 font-medium">
-              {loading ? "Loading..." : satuanKerja?.nama_satuan_kerja || `ID: ${user.id_satuankerja}`}
+              {loading
+                ? "Loading..."
+                : satuanKerja?.nama_satuan_kerja || `ID: ${user.personel?.id_satuankerja || "Tidak tersedia"}`}
             </Text>
           </View>
         </View>

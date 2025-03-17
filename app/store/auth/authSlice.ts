@@ -11,6 +11,7 @@ const initialState: AuthState = {
   error: null,
   requiresEmailVerification: false,
   verificationEmail: null,
+  expiresAt: null,
 }
 
 export const login = createAsyncThunk(
@@ -22,6 +23,9 @@ export const login = createAsyncThunk(
       // Store authentication data in AsyncStorage
       await AsyncStorage.setItem("userToken", response.token)
       await AsyncStorage.setItem("userData", JSON.stringify(response.user))
+      if (response.expiresAt) {
+        await AsyncStorage.setItem("tokenExpiresAt", response.expiresAt)
+      }
 
       return response
     } catch (error: any) {
@@ -30,6 +34,7 @@ export const login = createAsyncThunk(
   },
 )
 
+// Update the register thunk to handle the exact response format
 export const register = createAsyncThunk(
   "auth/register",
   async (
@@ -41,6 +46,7 @@ export const register = createAsyncThunk(
       tempat_lahir,
       tanggal_lahir,
       id_satuankerja,
+      password,
     }: {
       nama_lengkap: string
       username: string
@@ -49,6 +55,7 @@ export const register = createAsyncThunk(
       tempat_lahir: string
       tanggal_lahir: string
       id_satuankerja: number
+      password?: string
     },
     { rejectWithValue },
   ) => {
@@ -61,11 +68,14 @@ export const register = createAsyncThunk(
         tempat_lahir,
         tanggal_lahir,
         id_satuankerja,
+        password,
       )
 
       return {
         message: response.message,
         email: email,
+        user: response.user,
+        personel: response.personel,
       }
     } catch (error: any) {
       return rejectWithValue(error.message || "Registration failed")
@@ -73,21 +83,25 @@ export const register = createAsyncThunk(
   },
 )
 
+// Update the regenerateOTP thunk to handle the exact response format
+export const regenerateOTP = createAsyncThunk("auth/regenerateOTP", async (email: string, { rejectWithValue }) => {
+  try {
+    const response = await authService.regenerateOTP(email)
+    return {
+      message: response.message,
+      email: email,
+    }
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Failed to regenerate OTP")
+  }
+})
+
 export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (email: string, { rejectWithValue }) => {
   try {
     const response = await authService.forgotPassword(email)
     return response
   } catch (error: any) {
     return rejectWithValue(error.message || "Failed to send reset email")
-  }
-})
-
-export const regenerateOTP = createAsyncThunk("auth/regenerateOTP", async (email: string, { rejectWithValue }) => {
-  try {
-    const response = await authService.regenerateOTP(email)
-    return response
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to regenerate OTP")
   }
 })
 
@@ -114,10 +128,13 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    restoreUser: (state, action: PayloadAction<{ token: string; user: UserProfile }>) => {
+    restoreUser: (state, action: PayloadAction<{ token: string; user: UserProfile; expiresAt?: string }>) => {
       state.token = action.payload.token
       state.user = action.payload.user
       state.isAuthenticated = true
+      if (action.payload.expiresAt) {
+        state.expiresAt = action.payload.expiresAt
+      }
     },
     updateUserProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
       if (state.user) {
@@ -152,6 +169,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.token = action.payload.token
         state.user = action.payload.user
+        state.expiresAt = action.payload.expiresAt
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false
@@ -219,6 +237,7 @@ const authSlice = createSlice({
         state.user = null
         state.requiresEmailVerification = false
         state.verificationEmail = null
+        state.expiresAt = null
       })
   },
 })

@@ -84,7 +84,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
               </View>
 
               <TouchableOpacity
-                className={`bg-blue-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
+                className={`bg-amber-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
                 onPress={handleResetPassword}
                 disabled={loading}
               >
@@ -100,7 +100,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
             </>
           ) : (
             <TouchableOpacity
-              className="bg-blue-500 py-3 rounded-lg items-center mt-4"
+              className="bg-amber-500 py-3 rounded-lg items-center mt-4"
               onPress={() => navigation.navigate("Login")}
             >
               <Text className="text-white font-semibold text-lg">Kembali ke Login</Text>

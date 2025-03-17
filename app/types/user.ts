@@ -1,13 +1,30 @@
 export interface User {
-  id: string
-  nama_lengkap: string
+  id: number
+  name: string
   username: string
   email: string
-  no_hp: string
+  status: boolean
+  role: string
+  created_at: string
+  updated_at: string
+  personel?: Personel
+}
+
+export interface Personel {
+  id: number
+  nama_lengkap: string
   tempat_lahir: string
   tanggal_lahir: string
+  no_hp: string
+  jenis_kelamin: string
+  jenis_pekerjaan: string | null
+  intensitas: string | null
+  tinggi_badan: string | null
   id_satuankerja: number
-  satuankerja?: string
+  id_pangkat: number | null
+  id_user: number
+  created_at: string
+  updated_at: string
 }
 
 export interface UserProfile extends User {
@@ -24,6 +41,7 @@ export interface AuthState {
   error: string | null
   requiresEmailVerification: boolean
   verificationEmail: string | null
+  expiresAt: string | null
 }
 
 export interface SatuanKerja {
@@ -62,5 +80,43 @@ export interface SatuanKerjaParentResponse {
 export interface SatuanKerjaChildResponse {
   message: string
   data: SatuanKerjaChild[]
+}
+
+export interface LoginResponse {
+  message: string
+  user: UserProfile
+  token: string
+  expires_at: string
+}
+
+// Update the RegisterResponse interface to match the exact response format
+export interface RegisterResponse {
+  message: string
+  user: {
+    name: string
+    username: string
+    email: string
+    role: string
+    status: boolean
+    updated_at: string
+    created_at: string
+    id: number
+  }
+  personel: {
+    nama_lengkap: string
+    tempat_lahir: string
+    tanggal_lahir: string
+    no_hp: string
+    id_satuankerja: string
+    id_user: number
+    updated_at: string
+    created_at: string
+    id: number
+  }
+}
+
+// Update the RegenerateOTPResponse interface to match the exact response format
+export interface RegenerateOTPResponse {
+  message: string
 }
 

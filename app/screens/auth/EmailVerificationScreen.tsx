@@ -1,7 +1,7 @@
+// Update the EmailVerificationScreen to handle the new response format
 "use client"
 
 import { useRef } from "react"
-
 import { useState, useEffect } from "react"
 import {
   View,
@@ -125,14 +125,18 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
     }
 
     try {
-      await dispatch(regenerateOTP(verificationEmail)).unwrap()
+      console.log("Attempting to regenerate OTP for email:", verificationEmail)
+      const result = await dispatch(regenerateOTP(verificationEmail)).unwrap()
+      console.log("OTP regeneration result:", result)
+
       setResendDisabled(true)
-      Alert.alert("Sukses", "Kode verifikasi baru telah dikirim ke email Anda")
+      Alert.alert("Sukses", result.message || "Kode verifikasi baru telah dikirim ke email Anda")
 
       // Clear OTP fields
       setOtp(["", "", "", "", "", ""])
       inputRefs.current[0]?.focus()
     } catch (error) {
+      console.error("Failed to regenerate OTP:", error)
       // Error is handled by the useEffect above
     }
   }
@@ -149,7 +153,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
           <View className="items-center mb-8">
             <Text className="text-2xl font-bold text-gray-800">Verifikasi Email</Text>
             <Text className="text-gray-500 text-center mt-2">Kami telah mengirimkan kode verifikasi ke</Text>
-            <Text className="text-blue-500 font-medium mt-1">{verificationEmail || "email Anda"}</Text>
+            <Text className="text-amber-500 font-medium mt-1">{verificationEmail || "email Anda"}</Text>
           </View>
 
           <View className="mb-8">
@@ -171,7 +175,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
           </View>
 
           <TouchableOpacity
-            className={`bg-blue-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
+            className={`bg-amber-500 py-3 rounded-lg items-center ${loading ? "opacity-70" : ""}`}
             onPress={handleVerify}
             disabled={loading}
           >
@@ -191,7 +195,7 @@ export default function EmailVerificationScreen({ navigation }: EmailVerificatio
               <Text className="text-gray-400">Kirim ulang dalam {countdown}d</Text>
             ) : (
               <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
-                <Text className="text-blue-500 font-medium">Kirim Ulang Kode</Text>
+                <Text className="text-amber-500 font-medium">Kirim Ulang Kode</Text>
               </TouchableOpacity>
             )}
           </View>
